@@ -31,6 +31,17 @@ impl XWrap {
     #[must_use]
     #[allow(clippy::items_after_statements)]
     pub fn new() -> Self {
+        const extern "C" fn on_error_from_xlib(
+            _: *mut xlib::Display,
+            er: *mut xlib::XErrorEvent,
+        ) -> c_int {
+            let err = unsafe { *er };
+            //ignore bad window errors
+            if err.error_code == xlib::BadWindow {
+                return 0;
+            }
+            1
+        }
         const SERVER: mio::Token = mio::Token(0);
         let xlib = errors::exit_on_error!(xlib::Xlib::open());
         let display = unsafe { (xlib.XOpenDisplay)(ptr::null()) };
@@ -78,24 +89,8 @@ impl XWrap {
         // Setup cached keymap/modifier information, otherwise MappingNotify might never be called
         // from:
         // https://stackoverflow.com/questions/35569562/how-to-catch-keyboard-layout-change-event-and-get-current-new-keyboard-layout-on
-        xw.keysym_to_keycode(x11_dl::keysym::XK_F1);
+        let _ = xw.keysym_to_keycode(x11_dl::keysym::XK_F1);
 
-        // This is allowed for now as const extern fns
-        // are not yet stable (1.56.0, 16 Sept 2021)
-        // see issue #64926 <https://github.com/rust-lang/rust/issues/64926> for more information
-        // also this is the reason for #[allow(clippy::items_after_statements)] above
-        #[allow(clippy::missing_const_for_fn)]
-        extern "C" fn on_error_from_xlib(
-            _: *mut xlib::Display,
-            er: *mut xlib::XErrorEvent,
-        ) -> c_int {
-            let err = unsafe { *er };
-            //ignore bad window errors
-            if err.error_code == xlib::BadWindow {
-                return 0;
-            }
-            1
-        }
         unsafe {
             (xw.xlib.XSetErrorHandler)(Some(on_error_from_xlib));
             (xw.xlib.XSync)(xw.display, xlib::False);
@@ -165,14 +160,20 @@ impl XWrap {
     }
 
     /// Converts a keycode to a keysym.
-    #[must_use]
-    pub fn keycode_to_keysym(&self, keycode: u32) -> xkeysym_lookup::XKeysym {
+    ///
+    /// # Errors
+    /// - `LeftError::TryFromIntError`: if the `keycode` argument exceeds the u8 limit, it will not
+    ///   be coercable from u32 to u8 and will thus return an error. Potentially the conversion of
+    ///   the output of `XkbKeycodeToKeysym` coversion to u32 may overflow in this manner also.
+    pub fn keycode_to_keysym(&self, keycode: u32) -> Result<xkeysym_lookup::XKeysym, LeftError> {
         // Not using XKeysymToKeycode because deprecated.
-        let sym = unsafe { (self.xlib.XkbKeycodeToKeysym)(self.display, keycode as u8, 0, 0) };
-        sym as u32
+        let sym =
+            unsafe { (self.xlib.XkbKeycodeToKeysym)(self.display, u8::try_from(keycode)?, 0, 0) };
+        Ok(u32::try_from(sym)?)
     }
 
     /// Converts a keysym to a keycode.
+    #[must_use]
     pub fn keysym_to_keycode(&self, keysym: xkeysym_lookup::XKeysym) -> u32 {
         let code = unsafe { (self.xlib.XKeysymToKeycode)(self.display, keysym.into()) };
         u32::from(code)
@@ -183,7 +184,7 @@ impl XWrap {
     pub fn get_next_event(&self) -> xlib::XEvent {
         unsafe {
             let mut event: xlib::XEvent = std::mem::zeroed();
-            (self.xlib.XNextEvent)(self.display, &mut event);
+            (self.xlib.XNextEvent)(self.display, &raw mut event);
             event
         }
     }

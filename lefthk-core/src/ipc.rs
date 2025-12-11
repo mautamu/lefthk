@@ -50,6 +50,7 @@ impl Pipe {
         Ok(Self { pipe_file, rx })
     }
 
+    #[must_use]
     pub fn pipe_name() -> PathBuf {
         let display = std::env::var("DISPLAY")
             .ok()

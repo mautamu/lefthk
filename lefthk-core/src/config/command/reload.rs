@@ -15,6 +15,7 @@ inventory::submit! {DenormalizeCommandFunction::new::<Reload>()}
 pub struct Reload;
 
 impl Reload {
+    #[must_use]
     pub fn new() -> Self {
         Self
     }

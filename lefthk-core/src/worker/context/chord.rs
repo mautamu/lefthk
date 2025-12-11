@@ -7,6 +7,7 @@ pub struct Chord {
 }
 
 impl Chord {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             keybinds: None,

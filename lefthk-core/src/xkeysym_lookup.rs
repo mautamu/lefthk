@@ -7,6 +7,7 @@ pub type XKeysym = c_uint;
 pub type ModMask = c_uint;
 pub type Button = c_uint;
 
+#[must_use]
 pub fn clean_mask(mut mask: ModMask) -> ModMask {
     mask &= !(xlib::Mod2Mask | xlib::LockMask);
     mask & (xlib::ShiftMask

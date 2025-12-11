@@ -55,7 +55,7 @@ impl TryFrom<String> for Config {
             .iter_mut()
             .filter(|kb| matches!(kb.command, Command::Chord(_)))
             .collect();
-        propagate_exit_chord(chords, &global_exit_chord);
+        propagate_exit_chord(chords, global_exit_chord.as_ref());
 
         Ok(config)
     }
@@ -75,7 +75,7 @@ pub fn load() -> Result<Config> {
     Config::try_from(contents)
 }
 
-fn propagate_exit_chord(chords: Vec<&mut Keybind>, exit_chord: &Option<Keybind>) {
+fn propagate_exit_chord(chords: Vec<&mut Keybind>, exit_chord: Option<&Keybind>) {
     for chord in chords {
         if let Command::Chord(children) = &mut chord.command {
             if !children.iter().any(|kb| kb.command == Command::ExitChord) {
@@ -91,7 +91,7 @@ fn propagate_exit_chord(chords: Vec<&mut Keybind>, exit_chord: &Option<Keybind>)
                 .iter_mut()
                 .filter(|kb| matches!(kb.command, Command::Chord(_)))
                 .collect();
-            propagate_exit_chord(sub_chords, &parent_exit_chord);
+            propagate_exit_chord(sub_chords, parent_exit_chord.as_ref());
         }
     }
 }

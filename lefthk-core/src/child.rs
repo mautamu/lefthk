@@ -32,6 +32,7 @@ impl Children {
     ///
     /// # Panics
     /// - Panics if SIGCHLD cannot be created.
+    #[must_use]
     pub fn new() -> Self {
         let (guard, task_guard) = oneshot::channel();
         let task_notify = Arc::new(Notify::new());
