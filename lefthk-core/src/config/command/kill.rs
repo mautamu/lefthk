@@ -17,6 +17,7 @@ inventory::submit! {DenormalizeCommandFunction::new::<Kill>()}
 pub struct Kill;
 
 impl Kill {
+    #[must_use]
     pub fn new() -> Self {
         Self
     }

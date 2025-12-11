@@ -14,6 +14,7 @@ inventory::submit! {DenormalizeCommandFunction::new::<ExitChord>()}
 pub struct ExitChord;
 
 impl ExitChord {
+    #[must_use]
     pub fn new() -> Self {
         Self
     }

@@ -29,6 +29,7 @@ pub struct Worker {
 }
 
 impl Worker {
+    #[must_use]
     pub fn new(keybinds: Vec<Keybind>, base_directory: BaseDirectories) -> Self {
         Self {
             status: Status::Continue,
@@ -87,7 +88,7 @@ impl Worker {
     }
 
     fn handle_key_press(&mut self, event: &xlib::XKeyEvent) -> Error {
-        let key = self.xwrap.keycode_to_keysym(event.keycode);
+        let key = self.xwrap.keycode_to_keysym(event.keycode)?;
         let mask = xkeysym_lookup::clean_mask(event.state);
         if let Some(keybind) = self.get_keybind((mask, key)) {
             if let Ok(command) = command::denormalize(&keybind.command) {

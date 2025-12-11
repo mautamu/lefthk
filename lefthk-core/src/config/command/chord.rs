@@ -15,6 +15,7 @@ inventory::submit! {DenormalizeCommandFunction::new::<Chord>()}
 pub struct Chord(Vec<Keybind>);
 
 impl Chord {
+    #[must_use]
     pub fn new(keybinds: Vec<Keybind>) -> Self {
         Self(keybinds)
     }

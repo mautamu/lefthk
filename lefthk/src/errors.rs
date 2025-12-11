@@ -42,6 +42,8 @@ pub enum LeftError {
     SpannedError(#[from] ron::error::SpannedError),
     #[error("XDG error: {0}.")]
     XdgBaseDirError(#[from] xdg::BaseDirectoriesError),
+    #[error("Integer conversion overlow error: {0}.")]
+    TryFromIntError(#[from] std::num::TryFromIntError),
 
     #[error("No children found for chord.")]
     ChildrenNotFound,

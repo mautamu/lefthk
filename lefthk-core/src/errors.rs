@@ -39,6 +39,8 @@ pub enum LeftError {
     XlibError(#[from] x11_dl::error::OpenError),
     #[error("XDG error: {0}.")]
     XdgBaseDirError(#[from] xdg::BaseDirectoriesError),
+    #[error("Integer conversion overlow error: {0}.")]
+    TryFromIntError(#[from] std::num::TryFromIntError),
 
     #[error("Given String doesn't match with a command.")]
     UnmatchingCommand,
